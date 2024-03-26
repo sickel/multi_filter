@@ -24,13 +24,6 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="2" colspan="2">
-       <widget class="QPushButton" name="pBClear">
-        <property name="text">
-         <string>Clear</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="0" colspan="3">
        <widget class="QgsMapLayerComboBox" name="mMCLLayers"/>
       </item>
@@ -51,6 +44,13 @@
        <widget class="QPushButton" name="pBFilter">
         <property name="text">
          <string>Filter</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QPushButton" name="pBClear">
+        <property name="text">
+         <string>Clear</string>
         </property>
        </widget>
       </item>

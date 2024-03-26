@@ -222,6 +222,8 @@ class multiFilter:
                 self.dockwidget = multiFilterDockWidget()
                 self.dockwidget.tbAdd.clicked.connect(self.addLayer)
                 self.dockwidget.tbRemove.clicked.connect(self.removeLayer)
+                self.dockwidget.pBFilter.clicked.connect(self.filterlayers)
+                self.dockwidget.pBClear.clicked.connect(self.clearfilters)
                 
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
@@ -232,15 +234,45 @@ class multiFilter:
             self.dockwidget.show()  
             
     def addLayer(self):
-        text, ok = QInputDialog.getText(self.dockwidget, 'Add a New Wish', 'New Wish:')
-        if ok and text:
-            newItem = QListWidgetItem()
-            newItem.setText(text)
-            newItem.setData(Qt.UserRole,{'data':"test",'text':text})
-            self.dockwidget.lwLayers.addItem(newItem)
+        #text, ok = QInputDialog.getText(self.dockwidget, 'Add a New Wish', 'New Wish:')
+        layer = self.dockwidget.mMCLLayers.currentLayer()
+        #todo: check if layer already is in widgetlist
+        id = layer.id()
+        newItem = QListWidgetItem()
+        newItem.setText(layer.name())
+        newItem.setData(Qt.UserRole,{'id':id,"layer":layer})
+        self.dockwidget.lwLayers.addItem(newItem)
 
     def removeLayer(self):
         current_row = self.dockwidget.lwLayers.currentRow()
         if current_row >= 0:
             current_item = self.dockwidget.lwLayers.takeItem(current_row)
             del current_item 
+            
+    def filterlayers(self):
+        filtertext = self.dockwidget.pTEFiltertext.toPlainText()
+        print(filtertext)
+        self.setfilter(filtertext)
+   
+    def setfilter(self,filtertext):
+        listwdg = self.dockwidget.lwLayers
+        for i in range(listwdg.count()):
+            print(i)
+            item = listwdg.item(i)
+            layername = item.text()
+            print(layername)
+            itemdata = item.data(Qt.UserRole)
+            layer = itemdata['layer']
+            try:
+                print(f"Filtering {layername}")
+                # layer = QgsProject.instance().mapLayersByName(layername)[0]
+                layer.setSubsetString(filtertext)
+            except IndexError:
+                print(f"--->{layername} does not exist")
+            except:
+                #TODO mark layer in itemlist
+                print(f'Cannot filter {layername}')
+    
+    def clearfilters(self):
+        print('Clearing filters')
+        self.setfilter('')
