@@ -23,14 +23,13 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QInputDialog, QListWidgetItem
 # Initialize Qt resources from file resources.py
 from .resources import *
 
 # Import the code for the DockWidget
 from .multi_filter_dockwidget import multiFilterDockWidget
 import os.path
-
 
 class multiFilter:
     """QGIS Plugin Implementation."""
@@ -213,7 +212,6 @@ class multiFilter:
 
         if not self.pluginIsActive:
             self.pluginIsActive = True
-
             #print "** STARTING multiFilter"
 
             # dockwidget may not exist if:
@@ -222,7 +220,9 @@ class multiFilter:
             if self.dockwidget == None:
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = multiFilterDockWidget()
-
+                self.dockwidget.tbAdd.clicked.connect(self.addLayer)
+                self.dockwidget.tbRemove.clicked.connect(self.removeLayer)
+                
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
 
@@ -230,3 +230,17 @@ class multiFilter:
             # TODO: fix to allow choice of dock location
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
             self.dockwidget.show()  
+            
+    def addLayer(self):
+        text, ok = QInputDialog.getText(self.dockwidget, 'Add a New Wish', 'New Wish:')
+        if ok and text:
+            newItem = QListWidgetItem()
+            newItem.setText(text)
+            newItem.setData(Qt.UserRole,{'data':"test",'text':text})
+            self.dockwidget.lwLayers.addItem(newItem)
+
+    def removeLayer(self):
+        current_row = self.dockwidget.lwLayers.currentRow()
+        if current_row >= 0:
+            current_item = self.dockwidget.lwLayers.takeItem(current_row)
+            del current_item 
