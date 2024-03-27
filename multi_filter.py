@@ -266,7 +266,9 @@ class multiFilter:
             try:
                 print(f"Filtering {layername}")
                 # layer = QgsProject.instance().mapLayersByName(layername)[0]
-                layer.setSubsetString(filtertext)
+                if not layer.setSubsetString(filtertext):
+                    print(f'Cannot filter {layername}')
+                    # TODO set bgcolor
             except IndexError:
                 print(f"--->{layername} does not exist")
             except:
