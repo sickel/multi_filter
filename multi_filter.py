@@ -21,11 +21,13 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QgsProject
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt 
+from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.PyQt.QtWidgets import QAction, QInputDialog, QListWidgetItem
+from qgis.core import QgsProject
 # Initialize Qt resources from file resources.py
 from .resources import *
+
 
 # Import the code for the DockWidget
 from .multi_filter_dockwidget import multiFilterDockWidget
@@ -224,7 +226,7 @@ class multiFilter:
                 self.dockwidget.tbRemove.clicked.connect(self.removeLayer)
                 self.dockwidget.pBFilter.clicked.connect(self.filterlayers)
                 self.dockwidget.pBClear.clicked.connect(self.clearfilters)
-                
+                self.dockwidget.pbCopy.clicked.connect(self.copyfilter)
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
 
@@ -259,6 +261,7 @@ class multiFilter:
         for i in range(listwdg.count()):
             print(i)
             item = listwdg.item(i)
+            item.setBackground(QColor('#FFFFFF'))
             layername = item.text()
             print(layername)
             itemdata = item.data(Qt.UserRole)
@@ -268,9 +271,8 @@ class multiFilter:
                 # layer = QgsProject.instance().mapLayersByName(layername)[0]
                 if not layer.setSubsetString(filtertext):
                     print(f'Cannot filter {layername}')
+                    item.setBackground(QColor('#ff5566'))
                     # TODO set bgcolor
-            except IndexError:
-                print(f"--->{layername} does not exist")
             except:
                 #TODO mark layer in itemlist
                 print(f'Cannot filter {layername}')
@@ -278,3 +280,9 @@ class multiFilter:
     def clearfilters(self):
         print('Clearing filters')
         self.setfilter('')
+
+    def copyfilter(self):
+        """ Copies the filter from the selected layer to the filter edit area """
+        pass
+        # item = self.dockwidget.lwLayers.
+        
