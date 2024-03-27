@@ -250,14 +250,18 @@ class multiFilter:
             del current_item 
             
     def filterlayers(self):
+        """ Applies the filter in the text edit box to all layers """
         filtertext = self.dockwidget.pTEFiltertext.toPlainText()
         print(filtertext)
         self.setfilter(filtertext)
    
     def setfilter(self,filtertext):
+        """ Applies filtertext to all selected layers 
+        :param filtertext: The text to use as a filter, may be '' to remove filtering.
+        :type filtertext: String
+        """
         listwdg = self.dockwidget.lwLayers
         for i in range(listwdg.count()):
-            print(i)
             item = listwdg.item(i)
             layername = item.text()
             print(layername)
@@ -267,12 +271,11 @@ class multiFilter:
                 print(f"Filtering {layername}")
                 # layer = QgsProject.instance().mapLayersByName(layername)[0]
                 layer.setSubsetString(filtertext)
-            except IndexError:
-                print(f"--->{layername} does not exist")
             except:
                 #TODO mark layer in itemlist
                 print(f'Cannot filter {layername}')
     
     def clearfilters(self):
+        """ Clears filters for all layers"""
         print('Clearing filters')
         self.setfilter('')
