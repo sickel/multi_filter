@@ -24,10 +24,10 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt 
 from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.PyQt.QtWidgets import QAction, QInputDialog, QListWidgetItem
-from qgis.core import QgsProject
+from qgis.core import QgsProject, QgsSettings
 # Initialize Qt resources from file resources.py
 from .resources import *
-
+import json
 
 # Import the code for the DockWidget
 from .multi_filter_dockwidget import multiFilterDockWidget
@@ -171,7 +171,7 @@ class multiFilter:
         icon_path = ':/plugins/multi_filter/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u''),
+            text=self.tr(u'Multifilter'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
@@ -226,10 +226,21 @@ class multiFilter:
                 self.dockwidget.tbRemove.clicked.connect(self.removeLayer)
                 self.dockwidget.pBFilter.clicked.connect(self.filterlayers)
                 self.dockwidget.pBClear.clicked.connect(self.clearfilters)
-                self.dockwidget.pbCopy.clicked.connect(self.copyfilter)
+                self.dockwidget.tbCopy.clicked.connect(self.copyfilter)
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
-
+            s = QgsSettings()
+            print('reading ----')
+            settings = s.value('multi_filter/setup', None)
+            print(settings)
+            if not settings is None:
+                guidata = json.loads(settings)
+                if self.dockwidget.lwLayers.count() == 0: # No data in list, needs to rebuild
+                    for id in guidata['layers']:
+                        layer = QgsProject.instance().mapLayer(id)
+                        if not layer is None:
+                            self.addLayerToList(layer)
+                    self.dockwidget.pTEFiltertext.appendPlainText(guidata['filter'])
             # show the dockwidget
             # TODO: fix to allow choice of dock location
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
@@ -239,18 +250,23 @@ class multiFilter:
         #text, ok = QInputDialog.getText(self.dockwidget, 'Add a New Wish', 'New Wish:')
         layer = self.dockwidget.mMCLLayers.currentLayer()
         #todo: check if layer already is in widgetlist
+        self.addLayerToList(layer)
+    
+    def addLayerToList(self,layer):
         id = layer.id()
         newItem = QListWidgetItem()
         newItem.setText(layer.name())
-        newItem.setData(Qt.UserRole,{'id':id,"layer":layer})
+        newItem.setData(Qt.UserRole,{'id':id})
         self.dockwidget.lwLayers.addItem(newItem)
-
+        self.storelayers()
+        
     def removeLayer(self):
         current_row = self.dockwidget.lwLayers.currentRow()
         if current_row >= 0:
             current_item = self.dockwidget.lwLayers.takeItem(current_row)
             del current_item 
-            
+        self.storelayers()
+        
     def filterlayers(self):
         """ Applies the filter in the text edit box to all layers """
         filtertext = self.dockwidget.pTEFiltertext.toPlainText()
@@ -262,6 +278,7 @@ class multiFilter:
         :param filtertext: The text to use as a filter, may be '' to remove filtering.
         :type filtertext: String
         """
+        self.storelayers()
         listwdg = self.dockwidget.lwLayers
         for i in range(listwdg.count()):
             item = listwdg.item(i)
@@ -269,25 +286,50 @@ class multiFilter:
             layername = item.text()
             print(layername)
             itemdata = item.data(Qt.UserRole)
-            layer = itemdata['layer']
-            try:
-                print(f"Filtering {layername}")
-                # layer = QgsProject.instance().mapLayersByName(layername)[0]
-                if not layer.setSubsetString(filtertext):
+            layer = QgsProject.instance().mapLayer(itemdata['id'])
+            if not layer is None:
+                try:
+                    print(f"Filtering {layername}")
+                    # layer = QgsProject.instance().mapLayersByName(layername)[0]
+                    if not layer.setSubsetString(filtertext):
+                        print(f'Cannot filter {layername}')
+                        item.setBackground(QColor('#ff5566'))
+                        # TODO set bgcolor
+                except:
+                    #TODO mark layer in itemlist
                     print(f'Cannot filter {layername}')
-                    item.setBackground(QColor('#ff5566'))
-                    # TODO set bgcolor
-            except:
-                #TODO mark layer in itemlist
-                print(f'Cannot filter {layername}')
-    
+            else:
+                item.setBackground(QColor('#777'))
+            
     def clearfilters(self):
         """ Clears filters for all layers"""
         print('Clearing filters')
         self.setfilter('')
 
     def copyfilter(self):
-        """ Copies the filter from the selected layer to the filter edit area """
-        pass
-        # item = self.dockwidget.lwLayers.
+        """ Copies the filter from the selected layer(s) to the filter edit area """
         
+        items = self.dockwidget.lwLayers.selectedItems()
+        if len(items) > 0:
+            for item in items:
+                itemdata = item.data(Qt.UserRole)
+                filter = itemdata['layer'].subsetString()
+                if filter > '':
+                    self.dockwidget.pTEFiltertext.appendPlainText(filter)
+                    
+                
+    def storelayers(self):
+        """ Stores the current layers and filter expression to be able to
+        get it back when the project is reopened """
+        layerset = []
+        listwdg = self.dockwidget.lwLayers
+        for i in range(listwdg.count()):
+            item = listwdg.item(i)
+            itemdata = item.data(Qt.UserRole)
+            layerset.append(itemdata['id'])
+        filtertext = self.dockwidget.pTEFiltertext.toPlainText()
+        storedata = json.dumps({'filter': filtertext, 'layers' : layerset})
+        print("Writing:")
+        print(storedata)
+        s = QgsSettings()
+        s.setValue('multi_filter/setup', storedata)

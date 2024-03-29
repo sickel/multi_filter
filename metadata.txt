@@ -6,26 +6,32 @@
 name=Multifilter
 qgisMinimumVersion=3.0
 description=Filter multiple layers
-version=0.5
+version=0.9
 author=Morten Sickel
 email=morten@sickel.net
 
 about=Set the same filter on mulitple selected layers in a project
-    <b>Usage</b>
+    
+	<b>Usage</b>
     Select the layers to be filtered in the dropdown list and press the + button. Type in a filter expression in the text box and press "Filter". The same filter will be set on all layers, any existing filter will be removed.
     
     Select a layer and press the '-' button to remove the layer from the list, this will not change the filter status for the layer.
     
     Press 'Clear' to remove the filter on all listed layers, this will leave the layers unfiltered and not restore any earlier filter.
     
-    The plugin is not checking the filter in any way. At least for a layer from Postgis, there will be an error message if a wrong field name is given, for most other types of layers, it will fail quietly and not return any data. Tip: Set the filter on one of the layers using the normal filtering dialog and copy the string.
+    Press the 'C'-button to add the filter from the selected layer into the filter box. If there is any filter description in the box when this is done, the resulting filter will probably be invalid, as they should be chained together with an 'and', 'or' or similar if both parts are to be used.
     
-    <b>Plans</b>
+    The settings in the dialog will be stored in the active project.
+
+    The plugin is not checking the filter in any way. At least for a layer from Postgis or temporary scratch layers, there will be an error message if a wrong field name is given, for most other types of layers, it will fail quietly and not return any data. Tip: Set the filter on one of the layers using the normal filtering dialog and copy the string. Any layers on which the filter is detected to fail will be marked in red.
+    
+    The list is just the names of the layers as when they are added. If the layer name is changed later on, this will not be reflected. To update this, remove and re-add the layer or close and reopen the project. The filtering is based on the layer id and will work with the original layer.
+     
+    If a layer is not found when filtering, it will get marked with a gray background
+    
+	<b>Plans</b>
     <ul>
     <li>See if the filter creation dialog can be reused</li>
-    <li>Copy out a filter from one of the layers</li>
-    <li>Store layers and filter in the project.</li>
-    <li>Mark layers where the filter fails</li>
     <li>Mark layers with no items after filtering</li>
     </ul>
     
@@ -37,7 +43,8 @@ repository=http://github.com/sickel/multi_filter
 
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
-changelog=v0.5 Released
+changelog=v0.9 Storing settings in project. Can copy filter from layer. 
+     v0.5 Released
 
 # Tags are comma separated with spaces allowed
 tags=filter,vector

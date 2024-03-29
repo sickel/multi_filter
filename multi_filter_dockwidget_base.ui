@@ -49,9 +49,12 @@
        <widget class="QgsMapLayerComboBox" name="mMCLLayers"/>
       </item>
       <item row="0" column="5">
-       <widget class="QToolButton" name="toolButton">
+       <widget class="QToolButton" name="tbCopy">
         <property name="text">
          <string>C</string>
+        </property>
+        <property name="icon">
+         <iconset theme="copy"/>
         </property>
        </widget>
       </item>
