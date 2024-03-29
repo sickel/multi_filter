@@ -254,6 +254,15 @@ class multiFilter:
     
     def addLayerToList(self,layer):
         id = layer.id()
+        listwdg = self.dockwidget.lwLayers
+        # Check if layer already is added.
+        # It does not make sense to have same layer twice
+        for i in range(listwdg.count()):
+            item = listwdg.item(i)
+            itemdata = item.data(Qt.UserRole)
+            if itemdata['id'] == id:
+                item.setBackground(QColor('#44FF44'))
+                return
         newItem = QListWidgetItem()
         newItem.setText(layer.name())
         newItem.setData(Qt.UserRole,{'id':id})
@@ -269,9 +278,11 @@ class multiFilter:
         
     def filterlayers(self):
         """ Applies the filter in the text edit box to all layers """
+        # The filter is stored in setfilter
         filtertext = self.dockwidget.pTEFiltertext.toPlainText()
         print(filtertext)
         self.setfilter(filtertext)
+        
    
     def setfilter(self,filtertext):
         """ Applies filtertext to all selected layers 
@@ -288,13 +299,20 @@ class multiFilter:
             itemdata = item.data(Qt.UserRole)
             layer = QgsProject.instance().mapLayer(itemdata['id'])
             if not layer is None:
+                # A layer may have been added here and then later deleted
                 try:
                     print(f"Filtering {layername}")
-                    # layer = QgsProject.instance().mapLayersByName(layername)[0]
-                    if not layer.setSubsetString(filtertext):
+                    if layer.setSubsetString(filtertext):
+                        print(layername)
+                        print(layer.featureCount())
+                        if layer.featureCount() == 0:
+                            # MArking out layers with no items after filter
+                            item.setBackground(QColor('#FFCC88'))
+                    else:
                         print(f'Cannot filter {layername}')
                         item.setBackground(QColor('#ff5566'))
                         # TODO set bgcolor
+                    
                 except:
                     #TODO mark layer in itemlist
                     print(f'Cannot filter {layername}')
@@ -305,6 +323,7 @@ class multiFilter:
         """ Clears filters for all layers"""
         print('Clearing filters')
         self.setfilter('')
+        self.dockwidget.pTEFiltertext.document().setPlainText('')
 
     def copyfilter(self):
         """ Copies the filter from the selected layer(s) to the filter edit area """
