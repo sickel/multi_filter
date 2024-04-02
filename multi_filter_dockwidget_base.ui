@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>301</width>
+    <width>345</width>
     <height>433</height>
    </rect>
   </property>
@@ -17,17 +17,10 @@
    <layout class="QGridLayout" name="gridLayout">
     <item row="3" column="0">
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="4" column="0">
-       <widget class="QPushButton" name="pBFilter">
+      <item row="0" column="5">
+       <widget class="QToolButton" name="tbRemove">
         <property name="text">
-         <string>Filter</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QToolButton" name="tbAdd">
-        <property name="text">
-         <string>+</string>
+         <string>-</string>
         </property>
        </widget>
       </item>
@@ -38,30 +31,41 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="4">
-       <widget class="QToolButton" name="tbRemove">
-        <property name="text">
-         <string>-</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="0" colspan="3">
        <widget class="QgsMapLayerComboBox" name="mMCLLayers"/>
       </item>
-      <item row="0" column="5">
+      <item row="0" column="6">
        <widget class="QToolButton" name="tbCopy">
         <property name="text">
          <string>C</string>
         </property>
-        <property name="icon">
-         <iconset theme="copy"/>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QPushButton" name="pBFilter">
+        <property name="text">
+         <string>Filter</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="6">
+      <item row="0" column="4">
+       <widget class="QToolButton" name="tbAdd">
+        <property name="text">
+         <string>+</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="7">
+       <widget class="QToolButton" name="tbQueryDesigner">
+        <property name="text">
+         <string>Q</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="8">
        <widget class="QListWidget" name="lwLayers"/>
       </item>
-      <item row="2" column="0" colspan="6">
+      <item row="2" column="0" colspan="8">
        <widget class="QPlainTextEdit" name="pTEFiltertext"/>
       </item>
      </layout>

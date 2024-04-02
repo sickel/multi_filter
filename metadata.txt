@@ -6,7 +6,7 @@
 name=Multifilter
 qgisMinimumVersion=3.0
 description=Filter multiple layers
-version=0.9
+version=0.91
 author=Morten Sickel
 email=morten@sickel.net
 
@@ -23,7 +23,7 @@ about=Set the same filter on mulitple selected layers in a project
     
     The settings in the dialog will be stored in the active project.
 
-    The plugin is not checking the filter in any way. At least for a layer from Postgis or temporary scratch layers, there will be an error message if a wrong field name is given, for most other types of layers, it will fail quietly and not return any data. Tip: Set the filter on one of the layers using the normal filtering dialog and copy the string. Any layers on which the filter is detected to fail will be marked in red.
+    The plugin is not checking the filter in any way. At least for a layer from Postgis or temporary scratch layers, there will be an error message if a wrong field name is given, for most other types of layers, it will fail quietly and not return any data. Tip: Set the filter on one of the layers using the normal filtering dialog and copy the filter. A layer that has no items left when filtere will be marked in orange. Any layers on which the filter is detected to fail will be marked in red.
     
     The list is just the names of the layers as when they are added. If the layer name is changed later on, this will not be reflected. To update this, remove and re-add the layer or close and reopen the project. The filtering is based on the layer id and will work with the original layer.
      
@@ -32,7 +32,6 @@ about=Set the same filter on mulitple selected layers in a project
 	<b>Plans</b>
     <ul>
     <li>See if the filter creation dialog can be reused</li>
-    <li>Mark layers with no items after filtering</li>
     </ul>
     
 tracker=http://github.com/sickel/multi_filter
@@ -43,7 +42,8 @@ repository=http://github.com/sickel/multi_filter
 
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
-changelog=v0.9 Storing settings in project. Can copy filter from layer. 
+changelog=v0.91 Marking layers with no items after filtering
+     v0.9 Storing settings in project. Can copy filter from layer. 
      v0.5 Released
 
 # Tags are comma separated with spaces allowed

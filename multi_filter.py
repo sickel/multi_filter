@@ -23,6 +23,7 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt 
 from qgis.PyQt.QtGui import QIcon, QColor
+from qgis.gui import QgsQueryBuilder
 from qgis.PyQt.QtWidgets import QAction, QInputDialog, QListWidgetItem
 from qgis.core import QgsProject, QgsSettings
 # Initialize Qt resources from file resources.py
@@ -227,6 +228,7 @@ class multiFilter:
                 self.dockwidget.pBFilter.clicked.connect(self.filterlayers)
                 self.dockwidget.pBClear.clicked.connect(self.clearfilters)
                 self.dockwidget.tbCopy.clicked.connect(self.copyfilter)
+                self.dockwidget.tbQueryDesigner.clicked.connect(self.querydesigner)
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
             s = QgsSettings()
@@ -247,7 +249,6 @@ class multiFilter:
             self.dockwidget.show()  
             
     def addLayer(self):
-        #text, ok = QInputDialog.getText(self.dockwidget, 'Add a New Wish', 'New Wish:')
         layer = self.dockwidget.mMCLLayers.currentLayer()
         #todo: check if layer already is in widgetlist
         self.addLayerToList(layer)
@@ -303,16 +304,13 @@ class multiFilter:
                 try:
                     print(f"Filtering {layername}")
                     if layer.setSubsetString(filtertext):
-                        print(layername)
-                        print(layer.featureCount())
                         if layer.featureCount() == 0:
-                            # MArking out layers with no items after filter
-                            item.setBackground(QColor('#FFCC88'))
+                            # Marking out layers with no items after filter
+                            # Featiurecound may return -1 if no items
+                            item.setBackground(QColor('#FFA500'))
                     else:
                         print(f'Cannot filter {layername}')
                         item.setBackground(QColor('#ff5566'))
-                        # TODO set bgcolor
-                    
                 except:
                     #TODO mark layer in itemlist
                     print(f'Cannot filter {layername}')
@@ -332,11 +330,29 @@ class multiFilter:
         if len(items) > 0:
             for item in items:
                 itemdata = item.data(Qt.UserRole)
-                filter = itemdata['layer'].subsetString()
+                layer = QgsProject.instance().mapLayer(itemdata['id'])
+                filter = layer.subsetString()
                 if filter > '':
                     self.dockwidget.pTEFiltertext.appendPlainText(filter)
+                    layer = QgsProject.instance().mapLayer(itemdata['id'])
                     
-                
+                    
+    def querydesigner(self):
+        """ Opens the query designer on the selected layer
+            replaces the query in the edit window
+        """
+        items = self.dockwidget.lwLayers.selectedItems()
+        if len(items) > 0:
+            itemdata = items[0].data(Qt.UserRole)
+            #text, ok = QInputDialog.getText(self.dockwidget, 'Add a New Wish', 'New Wish:')
+            print(itemdata)
+            layer = QgsProject.instance().mapLayer(itemdata['id'])
+            qb = QgsQueryBuilder(layer,self.dockwidget)
+            qb.setModal(True)
+            qb.open()
+            print(qb.sql())
+            print(layer.subsetString())
+            
     def storelayers(self):
         """ Stores the current layers and filter expression to be able to
         get it back when the project is reopened """
