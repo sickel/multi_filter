@@ -5,8 +5,9 @@
 [general]
 name=Multifilter
 qgisMinimumVersion=3.0
+qgisMaximumVersion=4.99
 description=Filter multiple layers
-version=1.0
+version=1.1
 author=Morten Sickel
 email=morten@sickel.net
 
@@ -40,7 +41,8 @@ repository=http://github.com/sickel/multi_filter
 
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
-changelog=v1.0 Can use the Query Builder on a selected layer, more marking of layers that have or may have issues after filtering.
+changelog=v1.1 Updated to work in QGIS4
+     v1.0 Can use the Query Builder on a selected layer, more marking of layers that have or may have issues after filtering.
      v0.91 Marking layers with no items after filtering
      v0.9 Storing settings in project. Can copy filter from layer. 
      v0.5 Released
