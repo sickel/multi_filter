@@ -2,3 +2,4 @@ help/build
 zip_build
 *kate-swp
 __pycache__
+*.swp
