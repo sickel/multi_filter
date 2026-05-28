@@ -66,12 +66,8 @@ class multiFilter:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Multifilter')
-        # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'multiFilter')
         self.toolbar.setObjectName(u'multiFilter')
-
-        #print "** INITIALIZING multiFilter"
-
         self.pluginIsActive = False
         self.dockwidget = None
 
@@ -173,6 +169,7 @@ class multiFilter:
         self.add_action(
             icon_path,
             text=self.tr(u'Multifilter'),
+            status_tip = self.tr(u'Sets same filter on multiple layers'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
@@ -180,18 +177,12 @@ class multiFilter:
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
-
-        #print "** CLOSING multiFilter"
-
         # disconnects
         self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
 
         # remove this statement if dockwidget is to remain
         # for reuse if plugin is reopened
-        # Commented next statement since it causes QGIS crashe
-        # when closing the docked window:
-        # self.dockwidget = None
-
+        
         self.pluginIsActive = False
 
 
@@ -244,33 +235,43 @@ class multiFilter:
                             self.addLayerToList(layer)
                     self.dockwidget.pTEFiltertext.appendPlainText(guidata['filter'])
             # show the dockwidget
-            # TODO: fix to allow choice of dock location
-            self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
+            self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockwidget)
             self.dockwidget.show()  
             
     def addLayer(self):
+        """
+        Called to add a new layer to the list
+        """
         layer = self.dockwidget.mMCLLayers.currentLayer()
-        #todo: check if layer already is in widgetlist
         self.addLayerToList(layer)
     
     def addLayerToList(self,layer):
+        """ 
+        Adds a layer to the list in case it is not already in 
+        This is called either when adding a layer or when restoring the list 
+        """
         id = layer.id()
         listwdg = self.dockwidget.lwLayers
         # Check if layer already is added.
         # It does not make sense to have same layer twice
         for i in range(listwdg.count()):
             item = listwdg.item(i)
-            itemdata = item.data(Qt.UserRole)
+            itemdata = item.data(Qt.ItemDataRole.UserRole)
             if itemdata['id'] == id:
+                # The layer is already in the list, marks the existing layer
+                # and returns
                 item.setBackground(QColor('#44FF44'))
                 return
         newItem = QListWidgetItem()
         newItem.setText(layer.name())
-        newItem.setData(Qt.UserRole,{'id':id})
+        newItem.setData(Qt.ItemDataRole.UserRole,{'id':id})
         self.dockwidget.lwLayers.addItem(newItem)
         self.storelayers()
         
     def removeLayer(self):
+        """
+        Remove a layer from the list
+        """
         current_row = self.dockwidget.lwLayers.currentRow()
         if current_row >= 0:
             current_item = self.dockwidget.lwLayers.takeItem(current_row)
@@ -295,9 +296,10 @@ class multiFilter:
         for i in range(listwdg.count()):
             item = listwdg.item(i)
             item.setBackground(QColor('#FFFFFF'))
+            # Clears the background (sets to white) in case there were problems
+            # last time a filter was applied
             layername = item.text()
-            print(layername)
-            itemdata = item.data(Qt.UserRole)
+            itemdata = item.data(Qt.ItemDataRole.UserRole)
             layer = QgsProject.instance().mapLayer(itemdata['id'])
             if not layer is None:
                 # A layer may have been added here and then later deleted
@@ -312,9 +314,10 @@ class multiFilter:
                         print(f'Cannot filter {layername}')
                         item.setBackground(QColor('#ff5566'))
                 except:
-                    #TODO mark layer in itemlist
-                    print(f'Cannot filter {layername}')
+                    print(f'Exception: Cannot filter {layername}')
+                    item.setBackground(QColor('#ff5566'))
             else:
+                # The layer does not exist any longer
                 item.setBackground(QColor('#777'))
             
     def clearfilters(self):
@@ -329,7 +332,7 @@ class multiFilter:
         items = self.dockwidget.lwLayers.selectedItems()
         if len(items) > 0:
             for item in items:
-                itemdata = item.data(Qt.UserRole)
+                itemdata = item.data(Qt.ItemDataRole.UserRole)
                 layer = QgsProject.instance().mapLayer(itemdata['id'])
                 filter = layer.subsetString()
                 if filter > '':
@@ -343,16 +346,15 @@ class multiFilter:
         """
         items = self.dockwidget.lwLayers.selectedItems()
         if len(items) > 0:
-            itemdata = items[0].data(Qt.UserRole)
-            #text, ok = QInputDialog.getText(self.dockwidget, 'Add a New Wish', 'New Wish:')
-            print(itemdata)
+            itemdata = items[0].data(Qt.ItemDataRole.UserRole)
             layer = QgsProject.instance().mapLayer(itemdata['id'])
             qb = QgsQueryBuilder(layer,self.dockwidget)
-            qb.setModal(True)
-            qb.open()
-            print(qb.sql())
-            print(layer.subsetString())
-            
+            if qb.exec():
+                # Only set a new filter if the user presses 'OK*
+                self.dockwidget.pTEFiltertext.document().setPlainText(layer.subsetString())
+
+
+        
     def storelayers(self):
         """ Stores the current layers and filter expression to be able to
         get it back when the project is reopened """
@@ -360,7 +362,7 @@ class multiFilter:
         listwdg = self.dockwidget.lwLayers
         for i in range(listwdg.count()):
             item = listwdg.item(i)
-            itemdata = item.data(Qt.UserRole)
+            itemdata = item.data(Qt.ItemDataRole.UserRole)
             layerset.append(itemdata['id'])
         filtertext = self.dockwidget.pTEFiltertext.toPlainText()
         storedata = json.dumps({'filter': filtertext, 'layers' : layerset})
@@ -368,3 +370,6 @@ class multiFilter:
         print(storedata)
         s = QgsSettings()
         s.setValue('multi_filter/setup', storedata)
+     
+    def qbclose(self):
+        print('HEY!')
