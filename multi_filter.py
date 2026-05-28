@@ -21,7 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt 
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.gui import QgsQueryBuilder
 from qgis.PyQt.QtWidgets import QAction, QInputDialog, QListWidgetItem
@@ -33,6 +33,7 @@ import json
 # Import the code for the DockWidget
 from .multi_filter_dockwidget import multiFilterDockWidget
 import os.path
+
 
 class multiFilter:
     """QGIS Plugin Implementation."""
@@ -71,34 +72,21 @@ class multiFilter:
         self.pluginIsActive = False
         self.dockwidget = None
 
-
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
-
         We implement this ourselves since we do not inherit QObject.
-
         :param message: String for translation.
         :type message: str, QString
-
         :returns: Translated version of message.
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('multiFilter', message)
 
-
-    def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
+    def add_action(self, icon_path, text, callback, enabled_flag=True,
+                   add_to_menu=True, add_to_toolbar=True, status_tip=None,
+                   whats_this=None, parent=None):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -148,19 +136,14 @@ class multiFilter:
 
         if whats_this is not None:
             action.setWhatsThis(whats_this)
-
         if add_to_toolbar:
             self.toolbar.addAction(action)
-
         if add_to_menu:
             self.iface.addPluginToVectorMenu(
                 self.menu,
                 action)
-
         self.actions.append(action)
-
         return action
-
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
@@ -169,11 +152,11 @@ class multiFilter:
         self.add_action(
             icon_path,
             text=self.tr(u'Multifilter'),
-            status_tip = self.tr(u'Sets same filter on multiple layers'),
+            status_tip=self.tr(u'Sets same filter on multiple layers'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
@@ -182,15 +165,11 @@ class multiFilter:
 
         # remove this statement if dockwidget is to remain
         # for reuse if plugin is reopened
-        
-        self.pluginIsActive = False
 
+        self.pluginIsActive = False
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
-
-        #print "** UNLOAD multiFilter"
-
         for action in self.actions:
             self.iface.removePluginVectorMenu(
                 self.tr(u'&Multifilter'),
@@ -199,19 +178,17 @@ class multiFilter:
         # remove the toolbar
         del self.toolbar
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     def run(self):
         """Run method that loads and starts the plugin"""
 
         if not self.pluginIsActive:
             self.pluginIsActive = True
-            #print "** STARTING multiFilter"
-
             # dockwidget may not exist if:
-            #    first run of plugin
-            #    removed on close (see self.onClosePlugin method)
-            if self.dockwidget == None:
+            # - first run of plugin
+            # - removed on close (see self.onClosePlugin method)
+            if self.dockwidget is None:
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = multiFilterDockWidget()
                 self.dockwidget.tbAdd.clicked.connect(self.addLayer)
@@ -219,36 +196,40 @@ class multiFilter:
                 self.dockwidget.pBFilter.clicked.connect(self.filterlayers)
                 self.dockwidget.pBClear.clicked.connect(self.clearfilters)
                 self.dockwidget.tbCopy.clicked.connect(self.copyfilter)
-                self.dockwidget.tbQueryDesigner.clicked.connect(self.querydesigner)
+                self.dockwidget.tbQueryDesigner.clicked.connect(
+                        self.querydesigner)
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
             s = QgsSettings()
             print('reading ----')
             settings = s.value('multi_filter/setup', None)
             print(settings)
-            if not settings is None:
+            if settings is not None:
                 guidata = json.loads(settings)
-                if self.dockwidget.lwLayers.count() == 0: # No data in list, needs to rebuild
+                if self.dockwidget.lwLayers.count() == 0:
+                    # No data in list, needs to rebuild
                     for id in guidata['layers']:
                         layer = QgsProject.instance().mapLayer(id)
-                        if not layer is None:
+                        if layer is not None:
                             self.addLayerToList(layer)
-                    self.dockwidget.pTEFiltertext.appendPlainText(guidata['filter'])
+                    self.dockwidget.pTEFiltertext.appendPlainText(
+                            guidata['filter'])
             # show the dockwidget
-            self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockwidget)
-            self.dockwidget.show()  
-            
+            self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea,
+                                     self.dockwidget)
+            self.dockwidget.show()
+
     def addLayer(self):
         """
         Called to add a new layer to the list
         """
         layer = self.dockwidget.mMCLLayers.currentLayer()
         self.addLayerToList(layer)
-    
-    def addLayerToList(self,layer):
-        """ 
-        Adds a layer to the list in case it is not already in 
-        This is called either when adding a layer or when restoring the list 
+
+    def addLayerToList(self, layer):
+        """
+        Adds a layer to the list in case it is not already in
+        This is called either when adding a layer or when restoring the list
         """
         id = layer.id()
         listwdg = self.dockwidget.lwLayers
@@ -264,10 +245,10 @@ class multiFilter:
                 return
         newItem = QListWidgetItem()
         newItem.setText(layer.name())
-        newItem.setData(Qt.ItemDataRole.UserRole,{'id':id})
+        newItem.setData(Qt.ItemDataRole.UserRole, {'id': id})
         self.dockwidget.lwLayers.addItem(newItem)
         self.storelayers()
-        
+
     def removeLayer(self):
         """
         Remove a layer from the list
@@ -275,20 +256,20 @@ class multiFilter:
         current_row = self.dockwidget.lwLayers.currentRow()
         if current_row >= 0:
             current_item = self.dockwidget.lwLayers.takeItem(current_row)
-            del current_item 
+            del current_item
         self.storelayers()
-        
+
     def filterlayers(self):
         """ Applies the filter in the text edit box to all layers """
         # The filter is stored in setfilter
         filtertext = self.dockwidget.pTEFiltertext.toPlainText()
         print(filtertext)
         self.setfilter(filtertext)
-        
-   
-    def setfilter(self,filtertext):
-        """ Applies filtertext to all selected layers 
-        :param filtertext: The text to use as a filter, may be '' to remove filtering.
+
+    def setfilter(self, filtertext):
+        """ Applies filtertext to all selected layers
+        :param filtertext: The text to use as a filter,
+                           may be '' to remove filtering.
         :type filtertext: String
         """
         self.storelayers()
@@ -301,7 +282,7 @@ class multiFilter:
             layername = item.text()
             itemdata = item.data(Qt.ItemDataRole.UserRole)
             layer = QgsProject.instance().mapLayer(itemdata['id'])
-            if not layer is None:
+            if layer is not None:
                 # A layer may have been added here and then later deleted
                 try:
                     print(f"Filtering {layername}")
@@ -319,7 +300,7 @@ class multiFilter:
             else:
                 # The layer does not exist any longer
                 item.setBackground(QColor('#777'))
-            
+
     def clearfilters(self):
         """ Clears filters for all layers"""
         print('Clearing filters')
@@ -327,8 +308,9 @@ class multiFilter:
         self.dockwidget.pTEFiltertext.document().setPlainText('')
 
     def copyfilter(self):
-        """ Copies the filter from the selected layer(s) to the filter edit area """
-        
+        """ Copies the filter from the selected layer(s)
+        to the filter edit area
+        """
         items = self.dockwidget.lwLayers.selectedItems()
         if len(items) > 0:
             for item in items:
@@ -338,8 +320,7 @@ class multiFilter:
                 if filter > '':
                     self.dockwidget.pTEFiltertext.appendPlainText(filter)
                     layer = QgsProject.instance().mapLayer(itemdata['id'])
-                    
-                    
+
     def querydesigner(self):
         """ Opens the query designer on the selected layer
             replaces the query in the edit window
@@ -348,13 +329,12 @@ class multiFilter:
         if len(items) > 0:
             itemdata = items[0].data(Qt.ItemDataRole.UserRole)
             layer = QgsProject.instance().mapLayer(itemdata['id'])
-            qb = QgsQueryBuilder(layer,self.dockwidget)
+            qb = QgsQueryBuilder(layer, self.dockwidget)
             if qb.exec():
                 # Only set a new filter if the user presses 'OK*
-                self.dockwidget.pTEFiltertext.document().setPlainText(layer.subsetString())
+                self.dockwidget.pTEFiltertext.document().setPlainText(
+                        layer.subsetString())
 
-
-        
     def storelayers(self):
         """ Stores the current layers and filter expression to be able to
         get it back when the project is reopened """
@@ -365,11 +345,11 @@ class multiFilter:
             itemdata = item.data(Qt.ItemDataRole.UserRole)
             layerset.append(itemdata['id'])
         filtertext = self.dockwidget.pTEFiltertext.toPlainText()
-        storedata = json.dumps({'filter': filtertext, 'layers' : layerset})
+        storedata = json.dumps({'filter': filtertext, 'layers': layerset})
         print("Writing:")
         print(storedata)
         s = QgsSettings()
         s.setValue('multi_filter/setup', storedata)
-     
+
     def qbclose(self):
         print('HEY!')
